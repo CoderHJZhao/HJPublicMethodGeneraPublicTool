@@ -15,18 +15,42 @@
  */
 @interface PublicMethodTool : NSObject
 
+/** 获取文件大小*/
 + (CGFloat)getFileSize:(NSString *)filePath;
+/** 获取磁盘总空间*/
 + (CGFloat)diskOfAllSizeMBytes;
+/** 获取磁盘剩余空间*/
 + (CGFloat)diskOfFreeSizeMBytes;
+/** 获取字符串(或汉字)首字母*/
 + (NSString *)firstCharacterWithString:(NSString *)string;
+/** 将字符串数组按照元素首字母顺序进行排序分组*/
 + (NSDictionary *)dictionaryOrderByCharacterWithOriginalArray:(NSArray *)array;
+/** 获取当前时间
+ format: @"yyyy-MM-dd HH:mm:ss"、@"yyyy年MM月dd日 HH时mm分ss秒"*/
 + (NSString *)currentDateWithFormat:(NSString *)format;
+/**
+ *  计算上次日期距离现在多久
+ *
+ *  @param lastTime    上次日期(需要和格式对应)
+ *  @param format1     上次日期格式
+ *  @param currentTime 最近日期(需要和格式对应)
+ *  @param format2     最近日期格式
+ *
+ *  @return xx分钟前、xx小时前、xx天前
+ */
 + (NSString *)timeIntervalFromLastTime:(NSString *)lastTime
                         lastTimeFormat:(NSString *)format1
                          ToCurrentTime:(NSString *)currentTime
                      currentTimeFormat:(NSString *)format2;
-+ (NSString *)timeIntervalFromLastTime:(NSDate *)lastTime ToCurrentTime:(NSDate *)currentTime;
+/** 将十六进制颜色转换为 UIColor 对象*/
 + (UIColor *)colorWithHexString:(NSString *)color;
+/**
+ 怀旧 --> CIPhotoEffectInstant                         单色 --> CIPhotoEffectMono
+// 黑白 --> CIPhotoEffectNoir                            褪色 --> CIPhotoEffectFade
+// 色调 --> CIPhotoEffectTonal                           冲印 --> CIPhotoEffectProcess
+// 岁月 --> CIPhotoEffectTransfer                        铬黄 --> CIPhotoEffectChrome
+// CILinearToSRGBToneCurve, CISRGBToneCurveToLinear, CIGaussianBlur, CIBoxBlur, CIDiscBlur, CISepiaTone, CIDepthOfField 
+ */
 + (UIImage *)filterWithOriginalImage:(UIImage *)image filterName:(NSString *)name;
 + (UIImage *)blurWithOriginalImage:(UIImage *)image blurName:(NSString *)name radius:(NSInteger)radius;
 + (UIImage *)colorControlsWithOriginalImage:(UIImage *)image

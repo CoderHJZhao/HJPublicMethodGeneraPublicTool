@@ -126,16 +126,7 @@
     return [dateFormatter stringFromDate:[NSDate date]];
 }
 
-/**
- *  计算上次日期距离现在多久
- *
- *  @param lastTime    上次日期(需要和格式对应)
- *  @param format1     上次日期格式
- *  @param currentTime 最近日期(需要和格式对应)
- *  @param format2     最近日期格式
- *
- *  @return xx分钟前、xx小时前、xx天前
- */
+
 + (NSString *)timeIntervalFromLastTime:(NSString *)lastTime
                         lastTimeFormat:(NSString *)format1
                          ToCurrentTime:(NSString *)currentTime
@@ -189,7 +180,7 @@
     return @"";
 }
 
-//将十六进制颜色转换为 UIColor 对象
+
 + (UIColor *)colorWithHexString:(NSString *)color{
     NSString *cString = [[color stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
     // String should be 6 or 8 characters
