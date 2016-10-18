@@ -14,6 +14,11 @@
  * @brief 公共方法类
  */
 @interface PublicMethodTool : NSObject
+@property (nonatomic, copy) NSString *yearStr;
+@property (nonatomic, copy) NSString *monthStr;
+@property (nonatomic, copy) NSString *dayStr;
+@property (nonatomic, copy) NSString *weekStr;
+#pragma mark - 磁盘相关
 
 /** 获取文件大小*/
 + (CGFloat)getFileSize:(NSString *)filePath;
@@ -25,6 +30,9 @@
 + (NSString *)firstCharacterWithString:(NSString *)string;
 /** 将字符串数组按照元素首字母顺序进行排序分组*/
 + (NSDictionary *)dictionaryOrderByCharacterWithOriginalArray:(NSArray *)array;
+
+#pragma mark - 日期相关
+
 /** 获取当前时间
  format: @"yyyy-MM-dd HH:mm:ss"、@"yyyy年MM月dd日 HH时mm分ss秒"*/
 + (NSString *)currentDateWithFormat:(NSString *)format;
@@ -42,6 +50,20 @@
                         lastTimeFormat:(NSString *)format1
                          ToCurrentTime:(NSString *)currentTime
                      currentTimeFormat:(NSString *)format2;
+/* 获取制定日期的时间，转化格式*/
+- (NSString *)obtainTimeWith:(NSDate *)date format:(NSString *)format;
+/* 根据date获取年月星期*/
+- (void)obtainCurrentDetailTimeWithDate:(NSDate *)currentDate;
+/* date转时间戳*/
+- (NSString *)dateToTimeIntervalStrWithDate:(NSDate *)date;
+/* 时间戳转date*/
+- (NSDate *)TimeInvalToDateWithStr:(NSString *)str;
+
+- (void)timingStartWithBtn:(UIButton *)btn;
+
+
+#pragma mark - 图片处理和16进制颜色转换
+
 /** 将十六进制颜色转换为 UIColor 对象*/
 + (UIColor *)colorWithHexString:(NSString *)color;
 /**

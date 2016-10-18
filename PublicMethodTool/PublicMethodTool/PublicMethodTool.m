@@ -180,6 +180,103 @@
     return @"";
 }
 
+/* 倒计时*/
+- (void)timingStartWithBtn:(UIButton *)btn{
+    __block int timeout=59; //倒计时时间
+    
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    dispatch_source_t _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0,queue);
+    
+    dispatch_source_set_timer(_timer,dispatch_walltime(NULL, 0),1.0*NSEC_PER_SEC, 0); //每秒执行
+    
+    dispatch_source_set_event_handler(_timer, ^{
+        
+        if(timeout<=0){ //倒计时结束，关闭
+            
+            dispatch_source_cancel(_timer);
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                //设置界面的按钮显示 根据自己需求设置
+                
+                [btn setTitle:@"获取验证码" forState:UIControlStateNormal];
+                
+                btn.userInteractionEnabled = YES;
+                
+            });
+            
+        }else{
+            
+            //            int minutes = timeout / 60;
+            
+            int seconds = timeout % 60;
+            
+            NSString *strTime = [NSString stringWithFormat:@"%.2d", seconds];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                
+                //设置界面的按钮显示 根据自己需求设置
+                
+                [btn setTitle:[NSString stringWithFormat:@"%@ s",strTime] forState:UIControlStateNormal];
+                
+                btn.userInteractionEnabled = NO;
+                
+            });
+            
+            timeout--;
+            
+        }
+    });
+    dispatch_resume(_timer);
+}
+
+- (NSString *)obtainTimeWith:(NSDate *)date format:(NSString *)format;
+{
+    NSDate *senddate = date;
+    NSDateFormatter  *dateformatter=[[NSDateFormatter alloc] init];
+    [dateformatter setDateFormat:format];
+    return [dateformatter stringFromDate:senddate];
+}
+
+- (void)obtainCurrentDetailTimeWithDate:(NSDate *)currentDate
+{
+    NSArray * arrWeek=[NSArray arrayWithObjects:NSLocalizedString(@"星期日", @"星期日"),NSLocalizedString(@"星期一", @"星期一"),NSLocalizedString(@"星期二", @"星期二"),NSLocalizedString(@"星期三", @"星期三"),NSLocalizedString(@"星期四", @"星期四"),NSLocalizedString(@"星期五", @"星期五"),NSLocalizedString(@"星期六", @"星期六"), nil];
+    NSArray * arrMonth=[NSArray arrayWithObjects:NSLocalizedString(@"一月", @"一月"),NSLocalizedString(@"二月", @"二月"),NSLocalizedString(@"三月", @"三月"),NSLocalizedString(@"四月", @"四月"),NSLocalizedString(@"五月", @"五月"),NSLocalizedString(@"六月", @"六月"),NSLocalizedString(@"七月", @"七月"),NSLocalizedString(@"八月", @"八月"),NSLocalizedString(@"九月", @"九月"),NSLocalizedString(@"十月", @"十月"),NSLocalizedString(@"十一月", @"十一月"),NSLocalizedString(@"十二月", @"十二月"),nil];
+    NSDate *date = currentDate;
+    NSCalendar *calendar = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    NSDateComponents *comps = [[NSDateComponents alloc] init];
+    NSInteger unitFlags = NSCalendarUnitYear |
+    NSCalendarUnitMonth |
+    NSCalendarUnitDay |
+    NSCalendarUnitWeekday |
+    NSCalendarUnitHour |
+    NSCalendarUnitMinute |
+    NSCalendarUnitSecond;
+    comps = [calendar components:unitFlags fromDate:date];
+    NSInteger week = [comps weekday];
+    NSInteger year=[comps year];
+    NSInteger month = [comps month];
+    NSInteger day = [comps day];
+    self.yearStr = [NSString stringWithFormat:@"%ld",(long)year];
+    self.monthStr = [arrMonth objectAtIndex:month-1];
+    self.dayStr = [NSString stringWithFormat:@"%ld",(long)day];
+    self.weekStr = [arrWeek objectAtIndex:week-1];
+}
+
+- (NSString *)dateToTimeIntervalStrWithDate:(NSDate *)date
+{
+    //    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    NSString *timeSp = [NSString stringWithFormat:@"%ld", (long)[date timeIntervalSince1970]];
+    return timeSp;
+}
+
+- (NSDate *)TimeInvalToDateWithStr:(NSString *)str
+{
+    NSDate *date = [NSDate dateWithTimeIntervalSince1970:[str longLongValue]];
+    return date;
+}
+
 
 + (UIColor *)colorWithHexString:(NSString *)color{
     NSString *cString = [[color stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
