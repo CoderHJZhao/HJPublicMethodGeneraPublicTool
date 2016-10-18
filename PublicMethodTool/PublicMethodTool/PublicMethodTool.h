@@ -58,7 +58,7 @@
 - (NSString *)dateToTimeIntervalStrWithDate:(NSDate *)date;
 /* 时间戳转date*/
 - (NSDate *)TimeInvalToDateWithStr:(NSString *)str;
-
+/* 倒计时*/
 - (void)timingStartWithBtn:(UIButton *)btn;
 
 
