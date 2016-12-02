@@ -9,6 +9,7 @@
 #import "PublicMethodTool.h"
 #import <ifaddrs.h>
 #import <arpa/inet.h>
+#import <objc/runtime.h>
 
 @implementation PublicMethodTool
 
@@ -540,4 +541,175 @@
     [dashedLine.layer addSublayer:shapeLayer];
     return dashedLine;
 }
+
++ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod
+{
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        Class class = [self class];
+        // When swizzling a class method, use the following:
+        // Class class = object_getClass((id)self);
+        
+        SEL originalSelector = method;
+        SEL swizzledSelector = otherMethod;
+        
+        Method originalMethod = class_getInstanceMethod(class, originalSelector);
+        Method swizzledMethod = class_getInstanceMethod(class, swizzledSelector);
+        
+        BOOL didAddMethod =
+        class_addMethod(class,
+                        originalSelector,
+                        method_getImplementation(swizzledMethod),
+                        method_getTypeEncoding(swizzledMethod));
+        
+        if (didAddMethod) {
+            class_replaceMethod(class,
+                                swizzledSelector,
+                                method_getImplementation(originalMethod),
+                                method_getTypeEncoding(originalMethod));
+        } else {
+            method_exchangeImplementations(originalMethod, swizzledMethod);
+        }
+    });
+    
+}
+
++ (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"" message:msg preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    }])];
+    [manager presentViewController:alertController animated:YES completion:nil];
+}
+
++ (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager comfirmblock:(CallBackBlock)comfirmblock
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"" message:msg preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        comfirmblock(nil);
+    }])];
+    [manager presentViewController:alertController animated:YES completion:nil];
+}
+
+
++ (void)alertMsg:(NSString *)msg  title:(NSString *)title manager:(UIViewController *)manager
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:msg preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:([UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [alertController dismissViewControllerAnimated:YES completion:nil];
+    }])];
+    [manager presentViewController:alertController animated:YES completion:nil];
+}
+
++ (void)alertMsg:(NSString *)msg  title:(NSString *)title  comfirmTitle:(NSString *)comfirmTitle cancleTitle:(NSString *)cancleTitle manager:(UIViewController *)manager comfirmblock:(CallBackBlock)comfirmblock cancleBlock:(CallBackBlock)cancleBlock
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:msg preferredStyle:UIAlertControllerStyleAlert];
+    if (cancleTitle != nil) {
+        [alertController addAction:([UIAlertAction actionWithTitle:cancleTitle style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            cancleBlock(nil);
+        }])];
+    }
+    
+    [alertController addAction:([UIAlertAction actionWithTitle:comfirmTitle style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        comfirmblock(nil);
+    }])];
+    
+    
+    [manager presentViewController:alertController animated:YES completion:nil];
+    
+}
+
+/**
+ 判断机型
+ 
+ @return 返回机型信息
+ */
++ (NSString *)getModel
+{
+    size_t size;
+    //    sysctlbyname("hw.machine", NULL, &size, NULL, 0);
+    char *answer = malloc(size);
+    //    sysctlbyname("hw.machine", answer, &size, NULL, 0);
+    NSString *Model = [NSString stringWithCString:answer encoding: NSUTF8StringEncoding];
+    free(answer);
+    //平台对应详细列表,注释部分机型,现在市场上几乎不会有的,按照现在市场优先级排序
+    if ([Model isEqualToString:@"iPhone9,2"]) return @"iPhone 7 Plus";
+    if ([Model isEqualToString:@"iPhone9,1"]) return @"iPhone 7";
+    
+    if ([Model isEqualToString:@"iPhone8,1"]) return @"iPhone 6S";
+    if ([Model isEqualToString:@"iPhone8,2"]) return @"iPhone 6S Plus";
+    if ([Model isEqualToString:@"iPhone8,4"]) return @"iPhone SE";
+    
+    if ([Model isEqualToString:@"iPhone7,2"]) return @"iPhone 6";
+    if ([Model isEqualToString:@"iPhone7,1"]) return @"iPhone 6 Plus";
+    
+    if ([Model isEqualToString:@"iPhone6,1"]) return @"iPhone 5S";
+    if ([Model isEqualToString:@"iPhone6,2"]) return @"iPhone 5S";
+    
+    if ([Model isEqualToString:@"iPhone5,3"]) return @"iPhone 5C";
+    if ([Model isEqualToString:@"iPhone5,4"]) return @"iPhone 5C";
+    
+    if ([Model isEqualToString:@"iPhone5,1"]) return @"iPhone 5";
+    if ([Model isEqualToString:@"iPhone5,2"]) return @"iPhone 5";
+    
+    if ([Model isEqualToString:@"iPhone4,1"]) return @"iPhone 4S";
+    if ([Model isEqualToString:@"iPhone3,1"]) return @"iPhone 4";
+    if ([Model isEqualToString:@"iPhone3,2"]) return @"iPhone 4";
+    if ([Model isEqualToString:@"iPhone3,3"]) return @"iPhone 4";
+    
+    if ([Model isEqualToString:@"iPad1,1"])   return @"iPad 1G";
+    if ([Model isEqualToString:@"iPad2,1"])   return @"iPad 2";
+    if ([Model isEqualToString:@"iPad2,2"])   return @"iPad 2";
+    if ([Model isEqualToString:@"iPad2,3"])   return @"iPad 2";
+    if ([Model isEqualToString:@"iPad2,4"])   return @"iPad 2";
+    if ([Model isEqualToString:@"iPad2,5"])   return @"iPad Mini 1G";
+    if ([Model isEqualToString:@"iPad2,6"])   return @"iPad Mini 1G";
+    if ([Model isEqualToString:@"iPad2,7"])   return @"iPad Mini 1G";
+    
+    if ([Model isEqualToString:@"iPad3,1"])   return @"iPad 3";
+    if ([Model isEqualToString:@"iPad3,2"])   return @"iPad 3";
+    if ([Model isEqualToString:@"iPad3,3"])   return @"iPad 3";
+    if ([Model isEqualToString:@"iPad3,4"])   return @"iPad 4";
+    if ([Model isEqualToString:@"iPad3,5"])   return @"iPad 4";
+    if ([Model isEqualToString:@"iPad3,6"])   return @"iPad 4)";
+    
+    if ([Model isEqualToString:@"iPad4,1"])   return @"iPad Air";
+    if ([Model isEqualToString:@"iPad4,2"])   return @"iPad Air";
+    if ([Model isEqualToString:@"iPad4,3"])   return @"iPad Air";
+    if ([Model isEqualToString:@"iPad4,4"])   return @"iPad Mini 2G";
+    if ([Model isEqualToString:@"iPad4,5"])   return @"iPad Mini 2G";
+    if ([Model isEqualToString:@"iPad4,6"])   return @"iPad Mini 2G";
+    
+    if ([Model isEqualToString:@"i386"])      return @"iPhone Simulator";
+    if ([Model isEqualToString:@"x86_64"])    return @"iPhone Simulator";
+    
+    return Model;
+}
+
++ (NSString *)countNumAndChangeformat:(NSString *)num
+{
+    int count = 0;
+    long long int a = num.longLongValue;
+    while (a != 0)
+    {
+        count++;
+        a /= 10;
+    }
+    NSMutableString *string = [NSMutableString stringWithString:num];
+    NSMutableString *newstring = [NSMutableString string];
+    while (count > 3) {
+        count -= 3;
+        NSRange rang = NSMakeRange(string.length - 3, 3);
+        NSString *str = [string substringWithRange:rang];
+        [newstring insertString:str atIndex:0];
+        [newstring insertString:@"," atIndex:0];
+        [string deleteCharactersInRange:rang];
+    }
+    [newstring insertString:string atIndex:0];
+    return newstring;
+}
+
+
+
 @end

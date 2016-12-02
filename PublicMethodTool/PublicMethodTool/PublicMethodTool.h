@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+
+typedef void(^CallBackBlock)(id sender);
 /**
  * @author zhaohanjun, 16-06-01 10:06:33
  *
@@ -50,15 +52,15 @@
                         lastTimeFormat:(NSString *)format1
                          ToCurrentTime:(NSString *)currentTime
                      currentTimeFormat:(NSString *)format2;
-/* 获取制定日期的时间，转化格式*/
+/** 获取制定日期的时间，转化格式*/
 - (NSString *)obtainTimeWith:(NSDate *)date format:(NSString *)format;
-/* 根据date获取年月星期*/
+/** 根据date获取年月星期*/
 - (void)obtainCurrentDetailTimeWithDate:(NSDate *)currentDate;
-/* date转时间戳*/
+/** date转时间戳*/
 - (NSString *)dateToTimeIntervalStrWithDate:(NSDate *)date;
-/* 时间戳转date*/
+/** 时间戳转date*/
 - (NSDate *)TimeInvalToDateWithStr:(NSString *)str;
-/* 倒计时*/
+/** 倒计时*/
 - (void)timingStartWithBtn:(UIButton *)btn;
 
 
@@ -80,17 +82,47 @@
                                  brightness:(CGFloat)brightness
                                    contrast:(CGFloat)contrast;
 + (UIVisualEffectView *)effectViewWithFrame:(CGRect)frame;
+/**全屏截图*/
 + (UIImage *)shotScreen;
+/**截取view生成一张图片*/
 + (UIImage *)shotWithView:(UIView *)view;
+/**截取view中某个区域生成一张图片*/
 + (UIImage *)shotWithView:(UIView *)view scope:(CGRect)scope;
+/** 压缩图片到指定尺寸大小*/
 + (UIImage *)compressOriginalImage:(UIImage *)image toSize:(CGSize)size;
+/** 压缩图片到指定文件大小*/
 + (NSData *)compressOriginalImage:(UIImage *)image toMaxDataSizeKBytes:(CGFloat)size;
+/** 获取IP地址*/
 + (NSString *)getIPAddress;
+/** 判断字符串中是否含有空格*/
 + (BOOL)isHaveSpaceInString:(NSString *)string;
+/** 判断字符串中是否含有某个字符串*/
 + (BOOL)isHaveString:(NSString *)string1 InString:(NSString *)string2;
+/** 判断字符串是否全部为数字*/
 + (BOOL)isAllNum:(NSString *)string;
+/**
+ ** lineFrame:     虚线的 frame
+ ** length:        虚线中短线的宽度
+ ** spacing:       虚线中短线之间的间距
+ ** color:         虚线中短线的颜色
+ */
 + (UIView *)createDashedLineWithFrame:(CGRect)lineFrame
                            lineLength:(int)length
                           lineSpacing:(int)spacing
                             lineColor:(UIColor *)color;
++ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod;
+/** 封装了UIAlertController的几个方法，大家按需要使用*/
++ (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager;
++ (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager comfirmblock:(CallBackBlock)comfirmblock;
++ (void)alertMsg:(NSString *)msg  title:(NSString *)title manager:(UIViewController *)manager;
++ (void)alertMsg:(NSString *)msg  title:(NSString *)title  comfirmTitle:(NSString *)comfirmTitle cancleTitle:(NSString *)cancleTitle manager:(UIViewController *)manager comfirmblock:(CallBackBlock)comfirmblock cancleBlock:(CallBackBlock)cancleBlock;
+/**
+ 判断机型
+ 
+ @return 返回机型信息
+ */
++ (NSString *)getModel;
+/** 千分位转换  如100000  ---> 100,000*/
++ (NSString *)countNumAndChangeformat:(NSString *)numl;
+
 @end
