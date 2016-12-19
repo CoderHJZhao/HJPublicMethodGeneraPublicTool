@@ -110,7 +110,15 @@ typedef void(^CallBackBlock)(id sender);
                            lineLength:(int)length
                           lineSpacing:(int)spacing
                             lineColor:(UIColor *)color;
-+ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod;
+
+/**
+ 运行时替换方法
+
+ @param method 替换掉方法名
+ @param otherMethod 另一个方法名
+ @param exchangeClass 交换方法的类
+ */
++ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod forClass:(id)exchangeClass;
 /** 封装了UIAlertController的几个方法，大家按需要使用*/
 + (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager;
 + (void)alertMsg:(NSString *)msg manager:(UIViewController *)manager comfirmblock:(CallBackBlock)comfirmblock;
@@ -121,8 +129,12 @@ typedef void(^CallBackBlock)(id sender);
  
  @return 返回机型信息
  */
-+ (NSString *)getModel;
++ (NSString *)getCurrentDeviceModel;
 /** 千分位转换  如100000  ---> 100,000*/
 + (NSString *)countNumAndChangeformat:(NSString *)numl;
+/** 判断设备是否越狱*/
++ (BOOL)deviceIsJailbreak;
+/** 根据app ID，跳转至AppStore*/
++ (void)openAppFromAppStoreWithAppId:(NSString *)appId;
 
 @end

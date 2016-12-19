@@ -10,6 +10,9 @@
 #import <ifaddrs.h>
 #import <arpa/inet.h>
 #import <objc/runtime.h>
+#import <sys/sysctl.h>
+#import <dlfcn.h>
+#import <sys/stat.h>
 
 @implementation PublicMethodTool
 
@@ -542,11 +545,11 @@
     return dashedLine;
 }
 
-+ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod
++ (void)exchangeMethod:(SEL)method otherMethod:(SEL)otherMethod forClass:(id)exchangeClass
 {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        Class class = [self class];
+        Class class = [exchangeClass class];
         // When swizzling a class method, use the following:
         // Class class = object_getClass((id)self);
         
@@ -625,66 +628,67 @@
  
  @return 返回机型信息
  */
-+ (NSString *)getModel
++ (NSString *)getCurrentDeviceModel
 {
-    size_t size;
-    //    sysctlbyname("hw.machine", NULL, &size, NULL, 0);
-    char *answer = malloc(size);
-    //    sysctlbyname("hw.machine", answer, &size, NULL, 0);
-    NSString *Model = [NSString stringWithCString:answer encoding: NSUTF8StringEncoding];
-    free(answer);
-    //平台对应详细列表,注释部分机型,现在市场上几乎不会有的,按照现在市场优先级排序
-    if ([Model isEqualToString:@"iPhone9,2"]) return @"iPhone 7 Plus";
-    if ([Model isEqualToString:@"iPhone9,1"]) return @"iPhone 7";
+    int mib[2];
+    size_t len;
+    char *machine;
     
-    if ([Model isEqualToString:@"iPhone8,1"]) return @"iPhone 6S";
-    if ([Model isEqualToString:@"iPhone8,2"]) return @"iPhone 6S Plus";
-    if ([Model isEqualToString:@"iPhone8,4"]) return @"iPhone SE";
+    mib[0] = CTL_HW;
+    mib[1] = HW_MACHINE;
+    sysctl(mib, 2, NULL, &len, NULL, 0);
+    machine = malloc(len);
+    sysctl(mib, 2, machine, &len, NULL, 0);
     
-    if ([Model isEqualToString:@"iPhone7,2"]) return @"iPhone 6";
-    if ([Model isEqualToString:@"iPhone7,1"]) return @"iPhone 6 Plus";
+    NSString *platform = [NSString stringWithCString:machine encoding:NSASCIIStringEncoding];
+    free(machine);
     
-    if ([Model isEqualToString:@"iPhone6,1"]) return @"iPhone 5S";
-    if ([Model isEqualToString:@"iPhone6,2"]) return @"iPhone 5S";
+    if ([platform isEqualToString:@"iPhone3,1"]) return @"iPhone 4 (A1332)";
+    if ([platform isEqualToString:@"iPhone3,2"]) return @"iPhone 4 (A1332)";
+    if ([platform isEqualToString:@"iPhone3,3"]) return @"iPhone 4 (A1349)";
+    if ([platform isEqualToString:@"iPhone4,1"]) return @"iPhone 4s (A1387/A1431)";
+    if ([platform isEqualToString:@"iPhone5,1"]) return @"iPhone 5 (A1428)";
+    if ([platform isEqualToString:@"iPhone5,2"]) return @"iPhone 5 (A1429/A1442)";
+    if ([platform isEqualToString:@"iPhone5,3"]) return @"iPhone 5c (A1456/A1532)";
+    if ([platform isEqualToString:@"iPhone5,4"]) return @"iPhone 5c (A1507/A1516/A1526/A1529)";
+    if ([platform isEqualToString:@"iPhone6,1"]) return @"iPhone 5s (A1453/A1533)";
+    if ([platform isEqualToString:@"iPhone6,2"]) return @"iPhone 5s (A1457/A1518/A1528/A1530)";
+    if ([platform isEqualToString:@"iPhone7,1"]) return @"iPhone 6 Plus (A1522/A1524)";
+    if ([platform isEqualToString:@"iPhone7,2"]) return @"iPhone 6 (A1549/A1586)";
+    if ([platform isEqualToString:@"iPhone8,1"]) return @"iPhone 6s";
+    if ([platform isEqualToString:@"iPhone8,2"]) return @"iPhone 6s Plus";
+    if ([platform isEqualToString:@"iPod1,1"])   return @"iPod Touch 1G (A1213)";
+    if ([platform isEqualToString:@"iPod2,1"])   return @"iPod Touch 2G (A1288)";
+    if ([platform isEqualToString:@"iPod3,1"])   return @"iPod Touch 3G (A1318)";
+    if ([platform isEqualToString:@"iPod4,1"])   return @"iPod Touch 4G (A1367)";
+    if ([platform isEqualToString:@"iPod5,1"])   return @"iPod Touch 5G (A1421/A1509)";
     
-    if ([Model isEqualToString:@"iPhone5,3"]) return @"iPhone 5C";
-    if ([Model isEqualToString:@"iPhone5,4"]) return @"iPhone 5C";
+    if ([platform isEqualToString:@"iPad1,1"])   return @"iPad 1G (A1219/A1337)";
+    if ([platform isEqualToString:@"iPad2,1"])   return @"iPad 2 (A1395)";
+    if ([platform isEqualToString:@"iPad2,2"])   return @"iPad 2 (A1396)";
+    if ([platform isEqualToString:@"iPad2,3"])   return @"iPad 2 (A1397)";
+    if ([platform isEqualToString:@"iPad2,4"])   return @"iPad 2 (A1395+New Chip)";
+    if ([platform isEqualToString:@"iPad2,5"])   return @"iPad Mini 1G (A1432)";
+    if ([platform isEqualToString:@"iPad2,6"])   return @"iPad Mini 1G (A1454)";
+    if ([platform isEqualToString:@"iPad2,7"])   return @"iPad Mini 1G (A1455)";
     
-    if ([Model isEqualToString:@"iPhone5,1"]) return @"iPhone 5";
-    if ([Model isEqualToString:@"iPhone5,2"]) return @"iPhone 5";
+    if ([platform isEqualToString:@"iPad3,1"])   return @"iPad 3 (A1416)";
+    if ([platform isEqualToString:@"iPad3,2"])   return @"iPad 3 (A1403)";
+    if ([platform isEqualToString:@"iPad3,3"])   return @"iPad 3 (A1430)";
+    if ([platform isEqualToString:@"iPad3,4"])   return @"iPad 4 (A1458)";
+    if ([platform isEqualToString:@"iPad3,5"])   return @"iPad 4 (A1459)";
+    if ([platform isEqualToString:@"iPad3,6"])   return @"iPad 4 (A1460)";
     
-    if ([Model isEqualToString:@"iPhone4,1"]) return @"iPhone 4S";
-    if ([Model isEqualToString:@"iPhone3,1"]) return @"iPhone 4";
-    if ([Model isEqualToString:@"iPhone3,2"]) return @"iPhone 4";
-    if ([Model isEqualToString:@"iPhone3,3"]) return @"iPhone 4";
+    if ([platform isEqualToString:@"iPad4,1"])   return @"iPad Air (A1474)";
+    if ([platform isEqualToString:@"iPad4,2"])   return @"iPad Air (A1475)";
+    if ([platform isEqualToString:@"iPad4,3"])   return @"iPad Air (A1476)";
+    if ([platform isEqualToString:@"iPad4,4"])   return @"iPad Mini 2G (A1489)";
+    if ([platform isEqualToString:@"iPad4,5"])   return @"iPad Mini 2G (A1490)";
+    if ([platform isEqualToString:@"iPad4,6"])   return @"iPad Mini 2G (A1491)";
     
-    if ([Model isEqualToString:@"iPad1,1"])   return @"iPad 1G";
-    if ([Model isEqualToString:@"iPad2,1"])   return @"iPad 2";
-    if ([Model isEqualToString:@"iPad2,2"])   return @"iPad 2";
-    if ([Model isEqualToString:@"iPad2,3"])   return @"iPad 2";
-    if ([Model isEqualToString:@"iPad2,4"])   return @"iPad 2";
-    if ([Model isEqualToString:@"iPad2,5"])   return @"iPad Mini 1G";
-    if ([Model isEqualToString:@"iPad2,6"])   return @"iPad Mini 1G";
-    if ([Model isEqualToString:@"iPad2,7"])   return @"iPad Mini 1G";
-    
-    if ([Model isEqualToString:@"iPad3,1"])   return @"iPad 3";
-    if ([Model isEqualToString:@"iPad3,2"])   return @"iPad 3";
-    if ([Model isEqualToString:@"iPad3,3"])   return @"iPad 3";
-    if ([Model isEqualToString:@"iPad3,4"])   return @"iPad 4";
-    if ([Model isEqualToString:@"iPad3,5"])   return @"iPad 4";
-    if ([Model isEqualToString:@"iPad3,6"])   return @"iPad 4)";
-    
-    if ([Model isEqualToString:@"iPad4,1"])   return @"iPad Air";
-    if ([Model isEqualToString:@"iPad4,2"])   return @"iPad Air";
-    if ([Model isEqualToString:@"iPad4,3"])   return @"iPad Air";
-    if ([Model isEqualToString:@"iPad4,4"])   return @"iPad Mini 2G";
-    if ([Model isEqualToString:@"iPad4,5"])   return @"iPad Mini 2G";
-    if ([Model isEqualToString:@"iPad4,6"])   return @"iPad Mini 2G";
-    
-    if ([Model isEqualToString:@"i386"])      return @"iPhone Simulator";
-    if ([Model isEqualToString:@"x86_64"])    return @"iPhone Simulator";
-    
-    return Model;
+    if ([platform isEqualToString:@"i386"])      return @"iPhone Simulator";
+    if ([platform isEqualToString:@"x86_64"])    return @"iPhone Simulator";
+    return platform;
 }
 
 + (NSString *)countNumAndChangeformat:(NSString *)num
@@ -710,6 +714,73 @@
     return newstring;
 }
 
++ (BOOL)deviceIsJailbreak {
+    
+    //以下检测的过程是越往下，越狱越高级
+    
+    //    /Applications/Cydia.app, /privte/var/stash
+    BOOL jailbroken = NO;
+    NSString *cydiaPath = @"/Applications/Cydia.app";
+    NSString *aptPath = @"/private/var/lib/apt/";
+    if ([[NSFileManager defaultManager] fileExistsAtPath:cydiaPath]) {
+        jailbroken = YES;
+    }
+    if ([[NSFileManager defaultManager] fileExistsAtPath:aptPath]) {
+        jailbroken = YES;
+    }
+    
+    //可能存在hook了NSFileManager方法，此处用底层C stat去检测
+    struct stat stat_info;
+    if (0 == stat("/Library/MobileSubstrate/MobileSubstrate.dylib", &stat_info)) {
+        jailbroken = YES;
+    }
+    if (0 == stat("/Applications/Cydia.app", &stat_info)) {
+        jailbroken = YES;
+    }
+    if (0 == stat("/var/lib/cydia/", &stat_info)) {
+        jailbroken = YES;
+    }
+    if (0 == stat("/var/cache/apt", &stat_info)) {
+        jailbroken = YES;
+    }
+    //    /Library/MobileSubstrate/MobileSubstrate.dylib 最重要的越狱文件，几乎所有的越狱机都会安装MobileSubstrate
+    //    /Applications/Cydia.app/ /var/lib/cydia/绝大多数越狱机都会安装
+    //    /var/cache/apt /var/lib/apt /etc/apt
+    //    /bin/bash /bin/sh
+    //    /usr/sbin/sshd /usr/libexec/ssh-keysign /etc/ssh/sshd_config
+    
+    //可能存在stat也被hook了，可以看stat是不是出自系统库，有没有被攻击者换掉
+    //这种情况出现的可能性很小
+    int ret;
+    Dl_info dylib_info;
+    int (*func_stat)(const char *,struct stat *) = stat;
+    if ((ret = dladdr(func_stat, &dylib_info))) {
+        NSLog(@"lib:%s",dylib_info.dli_fname);      //如果不是系统库，肯定被攻击了
+        if (strcmp(dylib_info.dli_fname, "/usr/lib/system/libsystem_kernel.dylib")) {   //不相等，肯定被攻击了，相等为0
+            jailbroken = YES;
+        }
+    }
+    //还可以检测链接动态库，看下是否被链接了异常动态库，但是此方法存在appStore审核不通过的情况，这里不作罗列
+    //通常，越狱机的输出结果会包含字符串： Library/MobileSubstrate/MobileSubstrate.dylib——之所以用检测链接动态库的方法，是可能存在前面的方法被hook的情况。这个字符串，前面的stat已经做了
+    
+    //如果攻击者给MobileSubstrate改名，但是原理都是通过DYLD_INSERT_LIBRARIES注入动态库
+    //那么可以，检测当前程序运行的环境变量
+    char *env = getenv("DYLD_INSERT_LIBRARIES");
+    if (env != NULL) {
+        jailbroken = YES;
+    }
+    
+    return jailbroken;
+}
+
++ (void)openAppFromAppStoreWithAppId:(NSString *)appId
+{
+    NSString *str = [NSString stringWithFormat:
+                     @"itms-apps://itunes.apple.com/app/id%@",
+                     appId];
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
+    
+}
 
 
 @end
