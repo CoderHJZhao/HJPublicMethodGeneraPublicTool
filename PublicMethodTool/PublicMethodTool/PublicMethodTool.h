@@ -136,5 +136,16 @@ typedef void(^CallBackBlock)(id sender);
 + (BOOL)deviceIsJailbreak;
 /** 根据app ID，跳转至AppStore*/
 + (void)openAppFromAppStoreWithAppId:(NSString *)appId;
-
+/**
+ 判断是否有相机访问权限
+ */
++ (void)judgeCameraAuthorityWithController:(UIViewController *)controller colmpleteBlock:(void (^)(void))completeBlock;
+/**
+ 判断是否有访问麦克风的权限
+ */
++ (void)judgeMicroAuthorityWithController:(UIViewController *)controller colmpleteBlock:(void (^)(void))completeBlock;
+/**
+ 判断是否有定位权限
+ */
++ (BOOL)judgePositioningAuthorityWithController:(UIViewController *)controller;
 @end

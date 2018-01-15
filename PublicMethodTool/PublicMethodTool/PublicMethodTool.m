@@ -7,13 +7,16 @@
 //
 
 #import "PublicMethodTool.h"
+#import <AVFoundation/AVFoundation.h>
+#import <CoreLocation/CoreLocation.h>
 #import <ifaddrs.h>
 #import <arpa/inet.h>
 #import <objc/runtime.h>
 #import <sys/sysctl.h>
 #import <dlfcn.h>
 #import <sys/stat.h>
-
+//获取系统版本
+#define SEYSTEM_VERSION [[[UIDevice currentDevice] systemVersion] floatValue]
 @implementation PublicMethodTool
 
 /**
@@ -273,6 +276,36 @@
     //    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
     NSString *timeSp = [NSString stringWithFormat:@"%ld", (long)[date timeIntervalSince1970]];
     return timeSp;
+}
+
+- (NSDate *)turnToDateWithFomatDate:(NSString *)dateStr fomat:(NSString *)fomat
+{
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateStyle:NSDateFormatterMediumStyle];
+    [formatter setTimeStyle:NSDateFormatterShortStyle];
+    [formatter setDateFormat:fomat]; // ----------设置你想要的格式,hh与HH的区别:分别表示12小时制,24小时制
+    
+    //设置时区,这个对于时间的处理有时很重要
+    //例如你在国内发布信息,用户在国外的另一个时区,你想让用户看到正确的发布时间就得注意时区设置,时间的换算.
+    //例如你发布的时间为2010-01-26 17:40:50,那么在英国爱尔兰那边用户看到的时间应该是多少呢?
+    //他们与我们有7个小时的时差,所以他们那还没到这个时间呢...那就是把未来的事做了
+    
+    NSTimeZone* timeZone = [NSTimeZone timeZoneWithName:@"Asia/Shanghai"];
+    [formatter setTimeZone:timeZone];
+    
+    return [formatter dateFromString:dateStr]; //------------将字符串按formatter转成nsdate
+}
+
+
+- (BOOL)compareDateIsAscendingWithDate:(NSString *)date compareDate:(NSString *)compareDate format:(NSString *)format
+{
+    NSDate * date1 = [self turnToDateWithFomatDate:date fomat:format];
+    NSDate *date2 = [self turnToDateWithFomatDate:compareDate fomat:format];
+    if ([[self dateToTimeIntervalStrWithDate:date1] integerValue] > [[self dateToTimeIntervalStrWithDate:date2] integerValue])
+    {
+        return YES;
+    }
+    return NO;
 }
 
 - (NSDate *)TimeInvalToDateWithStr:(NSString *)str
@@ -780,6 +813,139 @@
                      appId];
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:str]];
     
+}
+
++ (BOOL)judgePositioningAuthorityWithController:(UIViewController *)controller
+{
+    if ([CLLocationManager locationServicesEnabled] && ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedWhenInUse || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined || [CLLocationManager authorizationStatus] == kCLAuthorizationStatusAuthorizedAlways)) {
+        //定位功能可用
+        //开始定位获取位置信息
+        return YES;
+        
+    }else if ([CLLocationManager authorizationStatus] ==kCLAuthorizationStatusDenied) {
+        
+        //定位不能用
+        [PublicMethodTool alertMsg:@"请到“设置-隐私-定位服务”选项中允许友金云贷访问您的位置。" title:@"定位权限未开启" comfirmTitle:@"去设置" cancleTitle:@"取消" manager:controller comfirmblock:^(id sender) {
+            
+            NSURL* url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+            if( [[UIApplication sharedApplication] canOpenURL:url] ) {
+                [[UIApplication sharedApplication] openURL:url];
+            }
+            
+        } cancleBlock:^(id sender) { }];
+        
+        return NO;
+    }
+    return NO;
+    
+}
+
++ (void)judgeCameraAuthorityWithController:(UIViewController *)controller colmpleteBlock:(void (^)(void))completeBlock
+{
+    AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    switch (status) {
+        case AVAuthorizationStatusNotDetermined:{
+            // 许可对话没有出现，发起授权许可
+            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+                
+                if (granted) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        completeBlock();
+                    });
+                }else{
+                    //用户拒绝
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [PublicMethodTool alertMsg:@"您已拒绝访问相机" title:nil comfirmTitle:@"确定" cancleTitle:nil manager:controller comfirmblock:^(id sender) {
+                        } cancleBlock:^(id sender) {
+                            
+                        }];
+                    });
+                    
+                }
+            }];
+            break;
+        }
+        case AVAuthorizationStatusAuthorized:{
+            // 已经开启授权，可继续
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completeBlock();
+            });
+            break;
+        }
+        case AVAuthorizationStatusDenied:
+        case AVAuthorizationStatusRestricted:
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // 用户明确地拒绝授权，或者相机设备无法访问
+                [PublicMethodTool alertMsg:@"请到“设置-隐私-相机”选项中允许友金云贷访问您相机，否则无法完成此步骤。" title:@"相机权限被关闭" comfirmTitle:@"去设置" cancleTitle:@"取消" manager:controller comfirmblock:^(id sender) {
+                    NSURL *url = [NSURL URLWithString:@"prefs:root=Privacy&path=CAMERA"];
+                    if (SEYSTEM_VERSION>=10) {
+                        url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                    }
+                    if( [[UIApplication sharedApplication] canOpenURL:url] ) {
+                        [[UIApplication sharedApplication] openURL:url];
+                    }
+                } cancleBlock:^(id sender) {
+                    
+                }];
+                
+            });
+            
+        }
+            
+            break;
+        default:
+            break;
+    }
+}
+
++ (void)judgeMicroAuthorityWithController:(UIViewController *)controller colmpleteBlock:(void (^)(void))completeBlock
+{
+    AVAuthorizationStatus videoAuthStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeAudio];
+    if (videoAuthStatus == AVAuthorizationStatusNotDetermined) {// 未询问用户是否授权
+        //第一次询问用户是否进行授权
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+            // CALL YOUR METHOD HERE - as this assumes being called only once from user interacting with permission alert!
+            if (granted) {
+                // Microphone enabled code
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completeBlock();
+                });
+            }
+            else {
+                // Microphone disabled code
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [PublicMethodTool alertMsg:@"您已拒绝访问麦克风" title:nil comfirmTitle:@"确定" cancleTitle:nil manager:controller comfirmblock:^(id sender) {
+                    } cancleBlock:^(id sender) {
+                        
+                    }];
+                });
+            }
+        }];
+    }
+    else if(videoAuthStatus == AVAuthorizationStatusRestricted || videoAuthStatus == AVAuthorizationStatusDenied) {// 未授权
+        dispatch_async(dispatch_get_main_queue(), ^{
+            //相机不能用
+            [PublicMethodTool alertMsg:@"请到“设置-隐私-相机”选项中允许友金云贷访问您麦克风，否则无法完成此步骤。" title:@"麦克风权限被关闭" comfirmTitle:@"去设置" cancleTitle:@"取消" manager:controller comfirmblock:^(id sender) {
+                NSURL *url = [NSURL URLWithString:@"prefs:root=Privacy"];
+                if (SEYSTEM_VERSION>=10) {
+                    url = [NSURL URLWithString:UIApplicationOpenSettingsURLString];
+                }
+                if( [[UIApplication sharedApplication] canOpenURL:url] ) {
+                    [[UIApplication sharedApplication] openURL:url];
+                }
+            } cancleBlock:^(id sender) {
+                
+            }];
+            
+        });
+    }
+    else{
+        // 已经开启授权，可继续
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completeBlock();
+        });
+    }
 }
 
 
